@@ -27,7 +27,7 @@ function which will choose initial cluster representatives or clusters. ?? Shoul
 """
 def initialSelection(data, k):
     centroids = []
-    for i in range(k):
+    while len(centroids) < k:
         centroid = data[random.randint(0, 149)]
         centroids.append(centroid)
     return centroids
@@ -90,7 +90,7 @@ def KMeans(data, k, maxIter=100):
         if np.array_equal(centroids, new_centroids):
             break
         centroids = new_centroids
-    return centroids, cluster_assignments
+    return cluster_assignments
 
 """
 function to compute silhouette coefficient to choose right k number. 
@@ -130,20 +130,18 @@ function to plot number of clusters vs. silhouttee coefficient values.
 def plot_silhouttee():
     dataset = load_dataset()
     s_cs = []
-    centroids, cluster_representatives = KMeans(dataset, 1)
-    for k in range(1, 11):
-        centroids, cluster_representatives = KMeans(dataset, k)
+    for k in range(1, 10):
+        cluster_representatives = KMeans(dataset, k)
         sl_coef = silhouette_coefficient(dataset, cluster_representatives)
         s_cs.append(sl_coef)
-    x = np.arange(10)
+    x = np.arange(start=1, stop=10, step=1)
     plt.plot(x, s_cs)
-    plt.xlabel('Number of clusters')
+    plt.xlabel('Number of clusters k')
     plt.ylabel("Sil coefficient")
     plt.show()
 
 """
-Final plot for task 1. 
-From the plot, silhouette coefficient close to 0, then x is on the border of 2 natural clusters. 
+Final plot for task 1. From the plot, silhouette coefficient close to 0, then x is on the border of 2 natural clusters. 
 Clustering should be checked to make silhouette coefficient close to 1.
 """
 plot_silhouttee()
