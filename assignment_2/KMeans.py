@@ -41,9 +41,6 @@ def ComputeDistance(vec_1, vec_2):
     distance = np.sqrt(np.dot(temp.T, temp))
     return distance
 
-# function, where x is the data and k is the value of maxIter.
-def clustername(x,k):
-    return x
 
 """
 function that will assign cluster ids to each data point.
