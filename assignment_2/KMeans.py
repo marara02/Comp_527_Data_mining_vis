@@ -8,22 +8,34 @@ Loading and normalizing data. Dataset is vector representations of words on
 initial column[0]. Normalization calculates vector norms by computing
 Euclidean norm of each vector
 """
-def load_dataset():
+def load_dataset(file='dataset'):
     word_vec = {}
-    with open('dataset') as f:
-        for line in f:
-            values = line.split()
-            word = values[0]
-            vector = np.array(values[1:], dtype=np.float32)
-            word_vec[word] = vector
-    dataset = np.array(list(word_vec.values()))
+    try:
+        with open(file) as f:
+            for line in f:
+                values = line.split()
+                word = values[0]
+                vector = np.array(values[1:], dtype=np.float32)
+                word_vec[word] = vector
+        dataset = np.array(list(word_vec.values()))
 
-    # Normalization of word vectors
-    dataset_normalized = dataset / np.linalg.norm(dataset, axis=1, keepdims=True)
+        if len(dataset) < 2:
+            raise ValueError("Dataset contains less than 2 data")
+        # Normalization of word vectors
+        dataset_normalized = dataset / np.linalg.norm(dataset, axis=1, keepdims=True)
+    except FileNotFoundError:
+        print(f"File '{file}' not found")
+        return None
+    except ValueError:
+        print(f"File '{file}' is corrupted or error file")
+        return None
     return dataset_normalized
 
+
 """
-function which will choose initial cluster representatives or clusters. ?? Should ask about functionality
+Input: Dataset data, number of clusters = k
+function which will choose initial cluster representatives or clusters.
+Output: Randomly selected centroids within a data in the initial step.
 """
 def initialSelection(data, k):
     centroids = []
@@ -32,9 +44,11 @@ def initialSelection(data, k):
         centroids.append(centroid)
     return centroids
 
-# 
+
 """
+Input: 2 points
 function to computing the distance between two points, distance calculated by Euclidean distance.
+Output: Euclidean distance
 """
 def ComputeDistance(vec_1, vec_2):
     temp = vec_1 - vec_2
@@ -43,7 +57,9 @@ def ComputeDistance(vec_1, vec_2):
 
 
 """
+Input: Dataset data, centroids
 function that will assign cluster ids to each data point.
+Output: Updated Centroids indexes to cluster data
 """
 def assignClusterIds(data, centroids):
     cluster_assignments = []
@@ -59,8 +75,11 @@ def assignClusterIds(data, centroids):
 
     return cluster_assignments   
 
+
 """
+Input: Dataset D, centroids = cluster_ids, number of clusters = k.
 function, which will compute the cluster representations.
+Output: updated cluster assignments. 
 """
 def computeClusterRepresentatives(data, cluster_ids, k):
     cluster_representatives = []
@@ -71,12 +90,15 @@ def computeClusterRepresentatives(data, cluster_ids, k):
             cluster_representatives.append(cluster_representative)
     return cluster_representatives
 
+
 """
+Input: Dataset data, number of clusters = k, number of iterations = 100
 Kmeans performance method. The method follow this steps:
 1. Initialize random cluster centroids
 2. Assign each data point to the nearest centroid
 3. Update centroids
 4. Repeats 2 and 3 until maximum iteration not reached and new centroid points remail unchanged.
+Output: data with assigned clusters.
 """
 def KMeans(data, k, maxIter=100):
     centroids = initialSelection(data, k)
@@ -89,8 +111,11 @@ def KMeans(data, k, maxIter=100):
         centroids = new_centroids
     return cluster_assignments
 
+
 """
 function to compute silhouette coefficient to choose right k number. 
+Input: Dataset data, cluster representatives =  cluster_assignments
+Output: Average Silhouette coefficient
 """
 def silhouette_coefficient(data, cluster_assignments):
     n = len(data)
@@ -121,8 +146,13 @@ def silhouette_coefficient(data, cluster_assignments):
     silhouette_avg = np.mean(silhouette_vals)
     return silhouette_avg
 
+
 """
 function to plot number of clusters vs. silhouttee coefficient values.
+Input: without input as parameters. But calls methods, load_dataset to load dataset
+KMeans to get the clustersIds, silhouette_coefficient 
+to compute Silhouette coefficient with number of clusters 1 to 9. 
+Output: Plot of vertical silhouette_coefficient and horizontal number of clusters.
 """
 def plot_silhouttee():
     dataset = load_dataset()

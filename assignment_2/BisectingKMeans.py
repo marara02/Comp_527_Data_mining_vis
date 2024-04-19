@@ -8,19 +8,29 @@ Loading and normalizing data. Dataset is vector representations of words on
 initial column[0]. Normalization calculates vector norms by computing
 Euclidean norm of each vector
 """
-def load_dataset():
+def load_dataset(file='dataset'):
     word_vec = {}
-    with open('dataset') as f:
-        for line in f:
-            values = line.split()
-            word = values[0]
-            vector = np.array(values[1:], dtype=np.float32)
-            word_vec[word] = vector
-    dataset = np.array(list(word_vec.values()))
+    try:
+        with open(file) as f:
+            for line in f:
+                values = line.split()
+                word = values[0]
+                vector = np.array(values[1:], dtype=np.float32)
+                word_vec[word] = vector
+        dataset = np.array(list(word_vec.values()))
 
-    # Normalization of word vectors
-    dataset_normalized = dataset / np.linalg.norm(dataset, axis=1, keepdims=True)
+        if len(dataset) < 2:
+            raise ValueError("Dataset contains less than 2 data")
+        # Normalization of word vectors
+        dataset_normalized = dataset / np.linalg.norm(dataset, axis=1, keepdims=True)
+    except FileNotFoundError:
+        print(f"File '{file}' not found")
+        return None
+    except ValueError:
+        print(f"File '{file}' is corrupted or error file")
+        return None
     return dataset_normalized
+
 
 # Coverting array to numpy array
 def convert_data_npArray(data):
