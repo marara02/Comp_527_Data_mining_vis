@@ -200,6 +200,6 @@ def plot_silhouttee():
     plt.plot(x, s_cs)
     plt.xlabel('Number of clusters k')
     plt.ylabel("Sil coefficient")
-    plt.show()
+    plt.savefig('bisectingkmeans.png')
 
 plot_silhouttee()

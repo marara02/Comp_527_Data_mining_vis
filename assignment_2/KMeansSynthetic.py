@@ -182,7 +182,7 @@ def plot_silhouttee():
     plt.plot(x, s_cs)
     plt.xlabel('Number of clusters k')
     plt.ylabel("Sil coefficient")
-    plt.show()
+    plt.savefig('kmeanssyndata.png')
 
 """
 Final plot for task 2. From the plot, silhouette coefficient close to 0, then x is on the border of 2 natural clusters. 
