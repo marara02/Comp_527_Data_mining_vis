@@ -59,9 +59,7 @@ function to computing the distance between two points, distance calculated by Eu
 Output: Euclidean distance
 """
 def ComputeDistance(vec_1, vec_2):
-    temp = vec_1 - vec_2
-    distance = np.sqrt(np.dot(temp.T, temp))
-    return distance
+    return np.linalg.norm(vec_1 - vec_2, axis=0)
 
 
 """
@@ -70,18 +68,12 @@ function that will assign cluster ids to each data point.
 Output: Updated Centroids indexes to cluster data
 """
 def assignClusterIds(data, centroids):
-    cluster_assignments = []
-
-    for d in data:
-        dist_point_clust = []
-        for centroid in centroids:
-            distance = ComputeDistance(d, centroid)
-            dist_point_clust.append(distance)
-        
-        assignment = np.argmin(dist_point_clust)
-        cluster_assignments.append(assignment)
-
-    return cluster_assignments   
+    clusters = []
+    for point in data:
+        distances = [ComputeDistance(point, centroid) for centroid in centroids]
+        cluster_id = distances.index(min(distances))
+        clusters.append(cluster_id)
+    return clusters  
 
 
 """

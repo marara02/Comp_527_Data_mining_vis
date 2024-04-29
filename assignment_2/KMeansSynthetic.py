@@ -19,13 +19,15 @@ def load_dataset(file='dataset'):
 
         if len(dataset) < 2:
             raise ValueError("Dataset contains less than 2 data")
+        dataset_normalized = dataset / np.linalg.norm(dataset, axis=1, keepdims=True)
+
     except FileNotFoundError:
         print(f"File '{file}' not found")
         return None
     except ValueError:
         print(f"File '{file}' is corrupted or error file")
         return None
-    return dataset
+    return dataset_normalized
 
 
 """
@@ -55,10 +57,8 @@ function which will choose initial cluster representatives or clusters.
 Output: Randomly selected centroids within a data in the initial step.
 """
 def initialSelection(data, k):
-    centroids = []
-    for i in range(k):
-        centroid = data[random.randint(0, 149)]
-        centroids.append(centroid)
+    initial_centroids = np.random.permutation(data.shape[0])[:k]    
+    centroids = data[initial_centroids]
     return centroids
 
 
@@ -68,9 +68,7 @@ function to computing the distance between two points, distance calculated by Eu
 Output: Euclidean distance
 """
 def ComputeDistance(vec_1, vec_2):
-    temp = vec_1 - vec_2
-    distance = np.sqrt(np.dot(temp.T, temp))
-    return distance
+    return np.linalg.norm(vec_1 - vec_2, axis=0)
 
 
 """
@@ -79,18 +77,12 @@ function that will assign cluster ids to each data point.
 Output: Updated Centroids indexes to cluster data
 """
 def assignClusterIds(data, centroids):
-    cluster_assignments = []
-
-    for d in data:
-        dist_point_clust = []
-        for centroid in centroids:
-            distance = ComputeDistance(d, centroid)
-            dist_point_clust.append(distance)
-        
-        assignment = np.argmin(dist_point_clust)
-        cluster_assignments.append(assignment)
-
-    return cluster_assignments   
+    clusters = []
+    for point in data:
+        distances = [ComputeDistance(point, centroid) for centroid in centroids]
+        cluster_id = distances.index(min(distances))
+        clusters.append(cluster_id)
+    return clusters 
 
 
 """
@@ -174,11 +166,11 @@ def plot_silhouttee():
     dataset = load_dataset()
     syn_data = generate_synthetic_data(dataset, 4)
     s_cs = []
-    for k in range(1, 10):
+    for k in range(2, 10):
         cluster_representatives = KMeansSynthetic(syn_data, k)
         sl_coef = silhouette_coefficient(syn_data, cluster_representatives)
         s_cs.append(sl_coef)
-    x = np.arange(start=1, stop=10, step=1)
+    x = np.arange(start=2, stop=10, step=1)
     plt.plot(x, s_cs)
     plt.xlabel('Number of clusters k')
     plt.ylabel("Sil coefficient")
