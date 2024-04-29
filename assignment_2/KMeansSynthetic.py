@@ -57,8 +57,8 @@ function which will choose initial cluster representatives or clusters.
 Output: Randomly selected centroids within a data in the initial step.
 """
 def initialSelection(data, k):
-    initial_centroids = np.random.permutation(data.shape[0])[:k]    
-    centroids = data[initial_centroids]
+    initial_centroids = np.random.choice(len(data), k, replace = False)   
+    centroids = data[initial_centroids, :]
     return centroids
 
 
@@ -82,7 +82,7 @@ def assignClusterIds(data, centroids):
         distances = [ComputeDistance(point, centroid) for centroid in centroids]
         cluster_id = distances.index(min(distances))
         clusters.append(cluster_id)
-    return clusters 
+    return np.array(clusters) 
 
 
 """
@@ -90,14 +90,10 @@ Input: Dataset D, centroids = cluster_ids, number of clusters = k.
 function, which will compute the cluster representations.
 Output: updated cluster assignments. 
 """
-def computeClusterRepresentatives(data, cluster_ids, k):
-    cluster_representatives = []
-    for cluster_id in range(k):
-        cluster_points = data[np.array(cluster_ids) == cluster_id]
-        if len(cluster_points) > 0:
-            cluster_representative = np.mean(cluster_points, axis=0)
-            cluster_representatives.append(cluster_representative)
-    return cluster_representatives
+def computeClusterRepresentatives(data, centroids, cluster_ids, k):
+    for idx in range(k):
+        centroids[idx] = np.mean(data[cluster_ids == idx], axis = 0)
+    return centroids
 
 
 """
@@ -114,11 +110,8 @@ def KMeansSynthetic(data, k, maxIter=100):
 
     for _ in range(maxIter):
         cluster_assignments = assignClusterIds(data, centroids)
-        new_centroids = computeClusterRepresentatives(data, cluster_assignments, k)
-        if np.array_equal(centroids, new_centroids):
-            break
-        centroids = new_centroids
-    return cluster_assignments
+        centroids = computeClusterRepresentatives(data, centroids, cluster_assignments, k)
+    return np.array(cluster_assignments), np.array(centroids)
 
 
 """
@@ -126,34 +119,28 @@ function to compute silhouette coefficient to choose right k number.
 Input: Dataset data, cluster representatives =  cluster_assignments
 Output: Average Silhouette coefficient
 """
-def silhouette_coefficient(data, cluster_assignments):
-    n = len(data)
-    silhouette_vals = []
-
-    # Compute distance matrix
-    distances = np.zeros((n, n))
-    for i in range(n):
-        for j in range(n):
-            distances[i, j] = np.linalg.norm(data[i] - data[j])
+def silhouette_coefficient(data, clusters, k):
+    sc_array = []
     
-    # Condition if the number of cluster is 1, return 0 as silhouette coefficient
-    if len(set(cluster_assignments)) == 1:
-        return 0
+    # Calculate pairwise Euclidean distances
+    distances = np.zeros((len(data), len(data)))
+    for i in range(len(data)):
+        for j in range(len(data)):
+            distances[i][j] = np.sqrt(np.sum((data[i] - data[j]) ** 2))
+    
+    for idx in range(len(data)):
+        cluster_id = clusters[idx]
+        A = np.mean(distances[idx][np.where(clusters == cluster_id)])
+        di = []
+        for i in range(k):
+            if i == cluster_id:
+                continue
+            di.append(np.mean(distances[idx][np.where(clusters == i)]))
+        B = np.min(di)
+        sc_array.append((B - A) / (max(A,B)))
+    sc = np.mean(sc_array)
+    return sc
 
-    for i in range(n):
-        cluster_idx = cluster_assignments[i]
-        cluster_points = [idx for idx, c in enumerate(cluster_assignments) if c == cluster_idx]
-
-        # average distance from i to all other points in the same cluster
-        A = np.mean([distances[i, j] for j in cluster_points if j != i])
-        # smallest average distance from i to all points in different clusters
-        B = np.min([np.mean([distances[i, j] for j in range(n) if cluster_assignments[j] != cluster_idx]) for cluster_idx in set(cluster_assignments) if cluster_idx != cluster_assignments[i]])
-       
-        s_cf = (B - A) / max(A, B)
-        silhouette_vals.append(s_cf)
-
-    silhouette_avg = np.mean(silhouette_vals)
-    return silhouette_avg
 
 """
 function to plot number of clusters vs. silhouttee coefficient values.
@@ -167,14 +154,15 @@ def plot_silhouttee():
     syn_data = generate_synthetic_data(dataset, 4)
     s_cs = []
     for k in range(2, 10):
-        cluster_representatives = KMeansSynthetic(syn_data, k)
-        sl_coef = silhouette_coefficient(syn_data, cluster_representatives)
+        cluster_representatives, centroids = KMeansSynthetic(syn_data, k)
+        sl_coef = silhouette_coefficient(syn_data, cluster_representatives, k)
         s_cs.append(sl_coef)
     x = np.arange(start=2, stop=10, step=1)
     plt.plot(x, s_cs)
     plt.xlabel('Number of clusters k')
     plt.ylabel("Sil coefficient")
     plt.savefig('kmeanssyndata.png')
+
 
 """
 Final plot for task 2. From the plot, silhouette coefficient close to 0, then x is on the border of 2 natural clusters. 
