@@ -132,11 +132,11 @@ Output: Plot of vertical silhouette_coefficient and horizontal number of cluster
 def plot_silhouttee():
     dataset = load_dataset()
     s_cs = []
-    for k in range(1, 10):
+    for k in range(2, 10):
         cluster_representatives, centroids = KMeans(dataset, k)
         sl_coef = silhouette_coefficient(dataset, cluster_representatives, k)
         s_cs.append(sl_coef)
-    x = np.arange(start=1, stop=10, step=1)
+    x = np.arange(start=2, stop=10, step=1)
     plt.plot(x, s_cs)
     plt.xlabel('Number of clusters k')
     plt.ylabel("Sil coefficient")
